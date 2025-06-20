@@ -1,136 +1,211 @@
-#include "word_chain_solver.h"
-#include <iostream>
-#include <algorithm>
-#include <vector>
-#include <cctype>
+#include "word_chain_solver.h"  
+#include <algorithm>           
+#include <cctype>            
+using namespace std;  
 
-using namespace std;
-
-// получение последнего значимого символа в слове (игнорируя мягкий знак в конце)
-char WordChainSolver::getLastChar(const string& word) const
+// Р¤СѓРЅРєС†РёСЏ РїСЂРѕРІРµСЂРєРё, СЃРѕСЃС‚РѕРёС‚ Р»Рё СЃР»РѕРІРѕ С‚РѕР»СЊРєРѕ РёР· СЂСѓСЃСЃРєРёС… Р±СѓРєРІ
+bool isRussianWord(const string& word) 
 {
-    char last = word.back();
-    if (last == 'ь' && word.size() > 1)
-    {
-        last = word[word.size() - 2];
-    }
-    return tolower(last); 
-}
-
-// Проверка, является ли цепочка слов подходящей
-bool WordChainSolver::isValidChain(const deque<string>& chain) const
-{
-    if (chain.empty()) return false; 
-    // Проверяем последовательное соответствие слов в цепочке
-    for (size_t i = 0; i < chain.size() - 1; ++i)
-    {
-        char last = getLastChar(chain[i]); 
-        char first = tolower(chain[i + 1][0]); 
-        if (last != first) {
-            return false; 
-        }
-    }
-
-    // Проверяем условие замкнутости цепочки (первая буква первого слова = последняя буква последнего слова)
-    char first_word_first = tolower(chain.front()[0]);
-    char last_word_last = getLastChar(chain.back());
-    return first_word_first == last_word_last;
-}
-
-// Поиск подходящей перестановки слов методом полного перебора
-bool WordChainSolver::findValidPermutation(deque<string>& resultChain)
-{
-    // Создаем временный вектор из списка слов для перестановок
-    vector<string> tempVector(words.begin(), words.end());
-    sort(tempVector.begin(), tempVector.end()); 
-
-    do
-    {
-        deque<string> currentChain(tempVector.begin(), tempVector.end());
-        if (isValidChain(currentChain)) // Если цепочка подходит
-        {
-            resultChain = currentChain; // Сохраняем результат
-            return true; 
-        }
-    } while (next_permutation(tempVector.begin(), tempVector.end()));
-
-    return false; 
-}
-
-// Конструктор класса, принимает список слов и очищает его от пустых строк
-WordChainSolver::WordChainSolver(const list<string>& inputWords) : words(inputWords)
-{
-    words.remove_if([](const string& s) { return s.empty(); });
-}
-
-// Основной метод решения задачи
-bool WordChainSolver::solve(deque<string>& resultChain)
-{
-    return findValidPermutation(resultChain); // Пытаемся найти подходящую перестановку
-}
-
-// Проверка является ли слово русским
-bool isRussianWord(const string& word)
-{
-    if (word.empty()) return false; 
-    for (char c : word)
+    if (word.empty()) return false;
+    for (char c : word) 
     {
         c = tolower(c);
-        if (!((c >= 'а' && c <= 'я') || c == 'ё' || c == 'ь'))
+        if (!((c >= 'Р°' && c <= 'СЏ') || c == 'С‘' || c == 'СЊ')) 
         {
-            return false;
+            return false;  
         }
     }
     return true;
 }
 
-// Валидация входных данных (строка слов)
-bool validateInput(const string& input)
+// Р¤СѓРЅРєС†РёСЏ РІР°Р»РёРґР°С†РёРё РІРІРµРґРµРЅРЅРѕР№ РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј СЃС‚СЂРѕРєРё
+bool validateInput(const string& input) 
 {
-    if (input.empty())
-    {
-        cout << "Ошибка: Пустой ввод." << endl;
-        return false;
-    }
-
-    size_t start = 0;
-    size_t end = input.find(' ');
-    bool hasValidWords = false;
-
-    // Разбиваем строку на слова по пробелам
+    if (input.empty()) return false;
+    size_t start = 0;  
+    size_t end = input.find(' ');  // РџРѕРёСЃРє РїРµСЂРІРѕРіРѕ РїСЂРѕР±РµР»Р°
+    bool hasValidWords = false; 
+    // Р¦РёРєР» РїРѕ РІСЃРµРј СЃР»РѕРІР°Рј, СЂР°Р·РґРµР»РµРЅРЅС‹Рј РїСЂРѕР±РµР»Р°РјРё
     while (end != string::npos)
     {
         string word = input.substr(start, end - start);
-        if (!word.empty()) {
-            if (!isRussianWord(word))
-            {
-                cout << "Ошибка: Цепочка содержит недопустимые символы." << endl;
-                return false;
-            }
-            hasValidWords = true;
+        // РџСЂРѕРІРµСЂРєР° СЃР»РѕРІР° РЅР° РІР°Р»РёРґРЅРѕСЃС‚СЊ, РµСЃР»Рё РѕРЅРѕ РЅРµ РїСѓСЃС‚РѕРµ
+        if (!word.empty() && !isRussianWord(word)) 
+        {
+            return false;  
         }
+        
+        if (!word.empty()) hasValidWords = true;
+        
         start = end + 1;
         end = input.find(' ', start);
     }
 
-    // Проверяем последнее слово в строке
+    
     string lastWord = input.substr(start);
     if (!lastWord.empty())
     {
-        if (!isRussianWord(lastWord))
-        {
-            cout << "Ошибка: Слово '" << lastWord << "' содержит недопустимые символы." << endl;
-            return false;
-        }
+        if (!isRussianWord(lastWord)) return false;
         hasValidWords = true;
     }
+    return hasValidWords;
+}
 
-    
-    if (!hasValidWords)
+// Р”РµСЃС‚СЂСѓРєС‚РѕСЂ MyList - РѕСЃРІРѕР±РѕР¶РґРµРЅРёРµ РїР°РјСЏС‚Рё
+template <typename T>
+MyList<T>::~MyList() 
+{
+    Node<T>* current = head;
+    while (current != nullptr)
     {
-        cout << "Ошибка: Не введено ни одного допустимого слова." << endl;
-        return false;
+        Node<T>* next = current->next;
+        delete current;
+        current = next;
+    }
+}
+
+// Р”РѕР±Р°РІР»РµРЅРёРµ СЌР»РµРјРµРЅС‚Р° РІ РєРѕРЅРµС† СЃРїРёСЃРєР°
+template <typename T>
+void MyList<T>::push_back(const T& value) 
+{
+    Node<T>* newNode = new Node<T>(value);
+    if (tail == nullptr) 
+    {
+        head = tail = newNode;
+    }
+    else 
+    {
+        tail->next = newNode;
+        tail = newNode;
+    }
+    size++;
+}
+
+// РЈРґР°Р»РµРЅРёРµ СЌР»РµРјРµРЅС‚РѕРІ РїРѕ СѓСЃР»РѕРІРёСЋ
+template <typename T>
+void MyList<T>::remove_if(bool (*predicate)(const T&))
+{
+    Node<T>** current = &head;
+    while (*current != nullptr) 
+    {
+        Node<T>* entry = *current;
+        if (predicate(entry->data)) 
+        {
+            *current = entry->next;
+            if (entry == tail) tail = *current ? tail : nullptr;
+            delete entry;
+            size--;
+        }
+        else 
+        {
+            current = &entry->next;
+        }
+    }
+}
+
+// Р”РµСЃС‚СЂСѓРєС‚РѕСЂ MyDeque - РѕСЃРІРѕР±РѕР¶РґРµРЅРёРµ РїР°РјСЏС‚Рё
+template <typename T>
+MyDeque<T>::~MyDeque() 
+{
+    Node<T>* current = front;
+    while (current != nullptr) 
+    {
+        Node<T>* next = current->next;
+        delete current;
+        current = next;
+    }
+}
+
+// Р”РѕР±Р°РІР»РµРЅРёРµ СЌР»РµРјРµРЅС‚Р° РІ РєРѕРЅРµС† РґРµРєР°
+template <typename T>
+void MyDeque<T>::push_back(const T& value) 
+{
+    Node<T>* newNode = new Node<T>(value);
+    if (back == nullptr)
+    {
+        front = back = newNode;
+    }
+    else 
+    {
+        back->next = newNode;
+        back = newNode;
+    }
+    size++;
+}
+
+template class MyList<string>;   // РЎРѕР·РґР°РЅРёРµ MyList РґР»СЏ string
+template class MyDeque<string>;  // РЎРѕР·РґР°РЅРёРµ MyDeque РґР»СЏ string
+template class MyVector<string>; // РЎРѕР·РґР°РЅРёРµ MyVector РґР»СЏ string
+
+// РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ WordChainSolver
+WordChainSolver::WordChainSolver(const MyList<string>& inputWords)
+    : words(inputWords)
+{  // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ СЃРїРёСЃРєР° СЃР»РѕРІ Рё СѓРґР°Р»РµРЅРёРµ РїСѓСЃС‚С‹С… СЃС‚СЂРѕРє РёР· СЃРїРёСЃРєР°
+    words.remove_if([](const string& s) { return s.empty(); });
+}
+
+// РџРѕР»СѓС‡РµРЅРёРµ РїРѕСЃР»РµРґРЅРµРіРѕ Р·РЅР°С‡РёРјРѕРіРѕ СЃРёРјРІРѕР»Р° СЃР»РѕРІР°
+char WordChainSolver::getLastChar(const string& word) const 
+{
+    char last = word.back();
+    if (last == 'СЊ' && word.size() > 1) 
+    {
+        last = word[word.size() - 2];
+    }
+    return tolower(last);
+}
+
+// РџСЂРѕРІРµСЂРєР° РІР°Р»РёРґРЅРѕСЃС‚Рё С†РµРїРѕС‡РєРё СЃР»РѕРІ
+bool WordChainSolver::isValidChain(const MyDeque<string>& chain) const 
+{
+    if (chain.empty()) return false;
+    // РС‚РµСЂР°С‚РѕСЂС‹ РґР»СЏ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕРіРѕ РїСЂРѕС…РѕРґР° РїРѕ С†РµРїРѕС‡РєРµ
+    auto it = chain.begin();
+    auto next_it = it;
+    ++next_it;
+    // РџСЂРѕРІРµСЂРєР° РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅС‹С… РїР°СЂ СЃР»РѕРІ
+    while (next_it != chain.end()) 
+    {
+        if (getLastChar(*it) != tolower((*next_it)[0]))
+        {
+            return false; 
+        }
+        ++it;
+        ++next_it;
     }
 
-    return true;
+    // РџСЂРѕРІРµСЂРєР° Р·Р°РјРєРЅСѓС‚РѕСЃС‚Рё С†РµРїРѕС‡РєРё 
+    return tolower(chain.front_element()[0]) == getLastChar(chain.back_element());
+}
+
+// РџРѕРёСЃРє РІР°Р»РёРґРЅРѕР№ РїРµСЂРµСЃС‚Р°РЅРѕРІРєРё СЃР»РѕРІ
+bool WordChainSolver::findValidPermutation(MyDeque<string>& resultChain)
+{
+    // Р’СЂРµРјРµРЅРЅС‹Р№ РІРµРєС‚РѕСЂ РґР»СЏ РїРµСЂРµСЃС‚Р°РЅРѕРІРѕРє
+    MyVector<string> tempVector;
+    for (const auto& word : words) 
+    {
+        tempVector.push_back(word);
+    }
+    sort(tempVector.begin(), tempVector.end());
+    do 
+    {
+        MyDeque<string> currentChain;
+        for (const auto& word : tempVector) 
+        {
+            currentChain.push_back(word);
+        }
+      
+        if (isValidChain(currentChain))
+        {
+            resultChain = currentChain;
+            return true;  
+        }
+    } while (next_permutation(tempVector.begin(), tempVector.end()));
+
+    return false;
+}
+bool WordChainSolver::solve(MyDeque<string>& resultChain) 
+{
+    return findValidPermutation(resultChain);
 }
