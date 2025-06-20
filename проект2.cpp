@@ -1,64 +1,69 @@
-﻿#include "word_chain_solver.h"  
-#include <iostream>             
-#include <list>                 
-#include <string>               
+#include "word_chain_solver.h"
+#include <iostream>
+#include <string>
 using namespace std;
 
-int main()
+int main() 
 {
     cout << "Введите слова через пробел: ";
     string input;
-    getline(cin, input);  
+    getline(cin, input);
+
     // Проверяем корректность введенных данных
     if (!validateInput(input))
     {
-        return 1;  
+        cout << "Ошибка ввода данных" << endl;
+        return 1;
     }
 
-    // Разбиваем введенную строку на отдельные слова по пробелам
-    list<string> words; 
-    size_t start = 0;    
+    // Создаем список для хранения слов
+    MyList<string> words;
+    size_t start = 0;
     size_t end = input.find(' ');
 
-    while (end != string::npos)  
+    // Разбиваем введенную строку на отдельные слова
+    while (end != string::npos) 
     {
-        string word = input.substr(start, end - start);  
-        if (!word.empty())  
+        string word = input.substr(start, end - start);
+        if (!word.empty())
         {
             words.push_back(word); 
         }
-        start = end + 1;           
+        start = end + 1;
         end = input.find(' ', start);
     }
 
-    // Обрабатываем последнее слово в строке (после последнего пробела)
+    // Добавляем последнее слово (после последнего пробела)
     string lastWord = input.substr(start);
-    if (!lastWord.empty())
+    if (!lastWord.empty()) 
     {
         words.push_back(lastWord);
     }
+
     
-    if (words.size() < 2)
+    if (words.getSize() < 2) 
     {
-        cout << "Ошибка: Для составления цепочки нужно как минимум 2 слова." << endl;
-        return 1; 
+        cout << "Для составления цепочки нужно минимум 2 слова" << endl;
+        return 1;
     }
 
     WordChainSolver solver(words);
-    deque<string> chain;  
-    if (solver.solve(chain))
+    MyDeque<string> chain;
+
+    if (solver.solve(chain)) 
     {
+        // Если цепочка найдена, выводим ее
         cout << "Цепочка найдена: ";
-        for (const auto& word : chain)  
+        for (const auto& word : chain)
         {
-            cout << word << " ";  
+            cout << word << " ";
         }
         cout << endl;
     }
-    else
+    else 
     {
         cout << "Невозможно составить цепочку" << endl;
     }
 
-    return 0;  
+    return 0;
 }
